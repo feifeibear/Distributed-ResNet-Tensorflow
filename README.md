@@ -4,7 +4,7 @@ This Repo contains code for Distributed ResNet Training and scripts to submit di
 I use the [official resnet model](https://github.com/tensorflow/models/tree/master/official/resnet) provided by google and wrap it with my distributed code using [SyncReplicaOptimzor](https://www.tensorflow.org/api_docs/python/tf/train/SyncReplicasOptimizer).
 Some modifications from official model in r1.4 are made to fit r1.3 version Tensorflow.
 
-##Problem occured:
+## Problem occured:
 I met the same problem with SyncReplicaOptimzor as mentioned in
 [github issue](https://github.com/tensorflow/tensorflow/issues/6976)
 [tensorflow](https://stackoverflow.com/questions/42006967/scalability-issues-related-to-distributed-tensorflow)
