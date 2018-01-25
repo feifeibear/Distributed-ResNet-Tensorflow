@@ -6,8 +6,11 @@ Some modifications from official model in r1.4 are made to fit r1.3 version Tens
 
 ## Problem occured:
 I met the same problem with SyncReplicaOptimzor as mentioned in
+
 [github issue](https://github.com/tensorflow/tensorflow/issues/6976)
-[tensorflow](https://stackoverflow.com/questions/42006967/scalability-issues-related-to-distributed-tensorflow)
+
+[stackoverflow](https://stackoverflow.com/questions/42006967/scalability-issues-related-to-distributed-tensorflow)
+
 If you have any idea to fix this problem, please contact the author.
 contact: Jiarui Fang (fjr14@mails.tsinghua.edu.cn)
 
