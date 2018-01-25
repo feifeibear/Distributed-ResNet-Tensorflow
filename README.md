@@ -23,10 +23,8 @@ CIFAR-10 Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 50 layer|86.4%|2ps-4wk|~80k|20.3
 50 layer|87.3%|4ps-8wk|~60k|19.19
 
-The eval best precisions are illustrated in the following picture. Jumps in curves are due to restart evaluaton from checkpoint, which will loss previous best precision values and shows sudden drop of curves in picture.
+The eval best precisions are illustrated in the following picture. Jumps in curves are due to restart evaluation from checkpoint, which will loss previous best precision values and shows sudden drop of curves in picture.
 ![image](./results/cifar10.jpeg)
-
-
 
 Distributed Versions get lower eval accuracy results as provided in [Tensorflow Model Research](https://github.com/tensorflow/models/tree/master/research/resnet)
 
