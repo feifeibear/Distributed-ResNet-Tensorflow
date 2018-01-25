@@ -24,7 +24,7 @@ CIFAR-10 Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 50 layer|87.3%|4ps-8wk|~60k|19.19
 
 The eval best precisions are illustrated in the following picture. Jumps in curves are due to restart evaluaton from checkpoint, which will loss previous best precision values and shows sudden drop of curves in picture.
-![image](./images/nongshalie.jpg)
+![image](./results/cifar10.jpeg)
 
 
 
