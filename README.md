@@ -1,11 +1,10 @@
-<font size=8><b>Distributed ResNet on Cifar and Imagenet Dataset.</b></font>
+<font size=16><b>Distributed ResNet on Cifar and Imagenet Dataset.</b></font>
 
-This Repo contains the code for Distributed ResNet Training and scripts to submit distributed tasks in slurm system.
-I use the [official resnet model](https://github.com/tensorflow/models/tree/master/official/resnet) provided by google and wrap it with my distributed code.
-Some modification is made to fit r1.3 version Tensorflow.
+This Repo contains code for Distributed ResNet Training and scripts to submit distributed tasks in slurm system, specific to Piz Daint Supercomputer.
+I use the [official resnet model](https://github.com/tensorflow/models/tree/master/official/resnet) provided by google and wrap it with my distributed code using [SyncReplicaOptimzor](https://www.tensorflow.org/api_docs/python/tf/train/SyncReplicasOptimizer).
+Some modifications from official model in r1.4 are made to fit r1.3 version Tensorflow.
 
-
-<b>Problem occured:</b>
+##Problem occured:
 I met the same problem with SyncReplicaOptimzor as mentioned in
 [github issue](https://github.com/tensorflow/tensorflow/issues/6976)
 [tensorflow](https://stackoverflow.com/questions/42006967/scalability-issues-related-to-distributed-tensorflow)
@@ -34,21 +33,27 @@ ImageNet Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 50 layer|62.6%| 8-ps-8wk| ~76k | 0.93
 50 layer|64.4%| 4-ps-8wk| ~75k | 0.90
 
+Also get lower eval accuracy values.
 
-<b>Prerequisite:</b>
+## Usage
+<b>Prerequists</b>
 
 1. Install TensorFlow, Bazel.
 Piz Daint dose not provide a Bazel combining with its default TensorFlow. Instead, I install a conda2 package on Daint. Bazel and other packages required, such as an CPU tensorflow, are installed by virtualenv inside conda2.
 
 2. Download ImageNet Dataset to Daint
 To avoid the error raised from unrecognition of the relative directory path, the following modification should made in download_and_preprocess_imagenet.sh.
-### old:
+replace
+```shell
 WORK_DIR="$0.runfiles/inception/inception"
-### new:
+```
+with
+```shell
 WORK_DIR="$(realpath -s "$0").runfiles/inception/inception"
-After few days, you will see the following data in your data path.
-Due to the file system of Daint dose not support storage of millions of files, I deleted raw-data directory.
 
+```
+After few days, you will see the following data in your data path.
+Due to the file system of Daint dose not support storage of millions of files, you have to deleted raw-data directory.
 
 3. Download CIFAR-10/CIFAR-100 dataset.
 ```shell
@@ -57,20 +62,8 @@ curl -o cifar-100-binary.tar.gz https://www.cs.toronto.edu/~kriz/cifar-100-binar
 ```
 
 <b>How to run:</b>
-
 ```shell
-# cd to the models repository and run with bash. Expected command output shown.
-# The directory should contain an empty WORKSPACE file, the resnet code, and the cifar10 dataset.
-# Note: The user can split 5k from train set for eval set.
-$ ls -R
-.:
-cifar10  resnet  WORKSPACE
-
-./cifar10:
-data_batch_1.bin  data_batch_2.bin  data_batch_3.bin  data_batch_4.bin
-data_batch_5.bin  test_batch.bin
-
-$ cd tools
+$ cd scripts 
 # run local for cifar10. It will launch 1 ps and 2 workers
 $ sh submit_local_dist.sh
 # run on Piz Daint for cifar
@@ -78,6 +71,15 @@ $ sh submit_cifar_daint_dist.sh #server #worker #batch_size
 # run on Piz Daint for Imagenet
 $ sh submit_imagenet_daint_dist.sh #server #worker
 ```
+I left one node for evaluation, so the #worker should be the #worker for traing plus one.
+For example, you would like to launch a 2 ps and 4 worker job and evaluate your model simultanously on another node. 
+The ps and work are assigned to the same node in default.
+```shell
+$ cd scripts
+$ sh submit_imagenet_daint_dist.sh 2 5
+```
+I
+
 
 <b>Related papers:</b>
 
