@@ -1,6 +1,6 @@
 # Distributed ResNet on Cifar and Imagenet Dataset.
 
-This Repo contains code for Distributed ResNet Training and scripts to submit distributed tasks in slurm system, specific to Piz Daint Supercomputer.
+This Repo contains code for Distributed ResNet Training and scripts to submit distributed tasks in slurm system, specific to multiple machine each having one GPU card.
 I use the [official resnet model](https://github.com/tensorflow/models/tree/master/official/resnet) provided by google and wrap it with my distributed code using [SyncReplicaOptimzor](https://www.tensorflow.org/api_docs/python/tf/train/SyncReplicasOptimizer).
 Some modifications from official model in r1.4 are made to fit r1.3 version Tensorflow.
 
@@ -14,6 +14,7 @@ contact: Jiarui Fang (fjr14@mails.tsinghua.edu.cn)
 <b>Results with this code:</b>
 1. Cifar-10
 global batch size = 128, eval results are as following.
+Each node is a P100 GPU.
 
 CIFAR-10 Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 --------------|--------------|------|-----|--------------
@@ -39,7 +40,7 @@ Also get lower eval accuracy values.
 <b>Prerequists</b>
 
 1. Install TensorFlow, Bazel.
-Piz Daint dose not provide a Bazel combining with its default TensorFlow. Instead, I install a conda2 package on Daint. Bazel and other packages required, such as an CPU tensorflow, are installed by virtualenv inside conda2.
+I install a conda2 package on Daint. Bazel and other packages required are installed by virtualenv inside conda2.
 
 2. Download ImageNet Dataset to Daint
 To avoid the error raised from unrecognition of the relative directory path, the following modification should made in download_and_preprocess_imagenet.sh.
@@ -66,9 +67,9 @@ curl -o cifar-100-binary.tar.gz https://www.cs.toronto.edu/~kriz/cifar-100-binar
 $ cd scripts 
 # run local for cifar10. It will launch 1 ps and 2 workers
 $ sh submit_local_dist.sh
-# run on Piz Daint for cifar
+# run distributed for cifar
 $ sh submit_cifar_daint_dist.sh #server #worker #batch_size
-# run on Piz Daint for Imagenet
+# run distributed for Imagenet
 $ sh submit_imagenet_daint_dist.sh #server #worker
 ```
 I left one node for evaluation, so the #worker should be the #worker for traing plus one.
