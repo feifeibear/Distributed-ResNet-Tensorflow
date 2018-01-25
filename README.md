@@ -78,8 +78,6 @@ The ps and work are assigned to the same node in default.
 $ cd scripts
 $ sh submit_imagenet_daint_dist.sh 2 5
 ```
-I
-
 
 <b>Related papers:</b>
 
