@@ -39,7 +39,7 @@ ImageNet Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 --------------|--------------|------|-----|--------------
 50 layer|62.6%| 8-ps-8wk| ~76k | 0.93
 50 layer|64.4%| 4-ps-8wk| ~75k | 0.90
-50 layer|- | - | - | 0.285
+50 layer|- | - | 8-ps-128wk | 0.285
 
 Also get lower eval accuracy values.
 
