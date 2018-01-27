@@ -33,14 +33,13 @@ Distributed Versions get lower eval accuracy results as provided in [Tensorflow 
 
 2. ImageNet
 We set global batch size as 128\*8 = 1024.
-Follows the Hyperparameter settting in [Intel-Caffe](https://github.com/intel/caffe/tree/master/models/intel_optimized_models/multinode/resnet_50_8_nodes), i.e. sub-batch-size is 128 for each node.
+Follows the Hyperparameter settting in [Intel-Caffe](https://github.com/intel/caffe/tree/master/models/intel_optimized_models/multinode/resnet_50_8_nodes), i.e. sub-batch-size is 128 for each node. Runing out of memory warning will occure for 128 sub-batch-size. 
 
 ImageNet Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 --------------|--------------|------|-----|--------------
 50 layer|62.6%| 8-ps-8wk| ~76k | 0.93
 50 layer|64.4%| 4-ps-8wk| ~75k | 0.90
-50 layer|- | - | 8-ps-128wk | 0.285
-
+50 layer|- | 8-ps-128wk | - | 0.285
 Also get lower eval accuracy values.
 
 ## Usage
