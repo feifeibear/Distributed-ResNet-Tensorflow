@@ -16,7 +16,13 @@ contact: Jiarui Fang (fjr14@mails.tsinghua.edu.cn)
 
 <b>Results with this code:</b>
 1. Cifar-10
-global batch size = 128, eval results are as following.
+global batch size = 128, evaluation results with test data are as following.
+A. One CPU with 4 Titan Xp GPU
+
+CIFAR-10 Model|Horovod Best Precision| #node |  steps| speed (stp/sec)|
+--------------|----------------------|-------|-------|------|
+50 layer      |93.3%                 |4      |~90k   |21.82 |
+
 Each node is a P100 GPU.
 
 CIFAR-10 Model|TF Best Precision|PS-WK   |Steps|Speed (stp/sec)|Horovod Best Prec. | #node | speed|
@@ -25,7 +31,7 @@ CIFAR-10 Model|TF Best Precision|PS-WK   |Steps|Speed (stp/sec)|Horovod Best Pre
 50 layer      |85.2%         |1ps-1wk |~80k |10.19
 50 layer      |86.4%         |2ps-4wk |~80k |20.3
 50 layer      |87.3%         |4ps-8wk |~60k |19.19          |-                  | 8     |28.66 |
-  
+
 The eval best precisions are illustrated in the following picture. Jumps in curves are due to restart evaluation from checkpoint, which will loss previous best precision values and shows sudden drop of curves in picture.
 ![image](./results/cifar10.jpeg)
 

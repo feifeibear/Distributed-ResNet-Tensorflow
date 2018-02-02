@@ -1,3 +1,4 @@
+. /home/fangjr/Envs/horovod/bin/activate
 export TF_SCRIPT="../resnet_cifar_main_horovod.py"
 export DATASET=cifar10
 export TF_FLAGS="
@@ -7,9 +8,11 @@ export TF_FLAGS="
   --train_dir=./tmp/resnet_model/train \
   --dataset=${DATASET} \
   --num_gpus=0 \
-  --batch_size=10 \
+  --batch_size=32 \
   --sync_replicas=True \
   --train_steps=80000
 "
 
 mpirun -np 4 python3 $TF_SCRIPT $TF_FLAGS
+
+deactivate
