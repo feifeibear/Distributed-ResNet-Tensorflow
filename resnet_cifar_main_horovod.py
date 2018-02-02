@@ -118,6 +118,9 @@ def create_config_proto():
       config.intra_op_parallelism_threads = FLAGS.num_intra_threads
   if(FLAGS.num_inter_threads != 0):
       config.inter_op_parallelism_threads = FLAGS.num_inter_threads
+
+  config.gpu_options.allow_growth = True
+  config.gpu_options.visible_device_list = str(hvd.local_rank())
   # config.gpu_options.force_gpu_compatible = params.force_gpu_compatible
   # if params.gpu_memory_frac_for_testing > 0:
   #   config.gpu_options.per_process_gpu_memory_fraction = (
@@ -304,10 +307,7 @@ def train(hps, server = None):
 
   if FLAGS.job_name == None: 
     #serial version
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.gpu_options.visible_device_list = str(hvd.local_rank())
-    config.allow_soft_placement=True
+    
     checkpoint_dir = FLAGS.log_root if hvd.rank() == 0 else None
 
     with tf.train.MonitoredTrainingSession(
