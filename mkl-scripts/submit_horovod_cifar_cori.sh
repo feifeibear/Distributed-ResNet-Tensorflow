@@ -22,7 +22,7 @@ export LOG_DIR=./logs/horovod_cifar_$DATASET_${SLURM_NNODES}_nodes_$BATCH_SIZE_l
 
 export TF_FLAGS="
   --use_horovod=True \
-  --train_data_path=$HOME/dataset \
+  --train_data_path=$SCRATCH/data \
   --log_root=${LOG_DIR}/resnet_model \
   --train_dir=${LOG_DIR}/resnet_model/train \
   --dataset=${DATASET} \
