@@ -71,9 +71,9 @@ class ResNet(object):
   def _build_model(self, istrain):
     """Build the core model within the graph."""
     if FLAGS.dataset == 'cifar10':
-      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size=50, num_classes = self.hps.num_classes, data_format=None)
+      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size=50, num_classes = self.hps.num_classes, data_format=FLAGS.data_format)
     elif FLAGS.dataset == 'imagenet':
-      network = resnet_model_official.imagenet_resnet_v2(resnet_size = 50, num_classes = self.hps.num_classes, data_format=None)
+      network = resnet_model_official.imagenet_resnet_v2(resnet_size = 50, num_classes = self.hps.num_classes, data_format=FLAGS.data_format)
 
     logits = network(self._images, istrain)
     self.predictions = tf.nn.softmax(logits)

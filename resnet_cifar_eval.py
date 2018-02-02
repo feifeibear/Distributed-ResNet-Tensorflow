@@ -45,6 +45,43 @@ tf.app.flags.DEFINE_string('log_root', '',
                            'parent directory of FLAGS.train_dir/eval_dir.')
 tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
+tf.flags.DEFINE_string('data_format', 'channels_first',
+                           'channels_first for cuDNN, channels_last for MKL')
+tf.flags.DEFINE_integer("num_intra_threads", 0,
+                     "Number of threads to use for intra-op parallelism. If set" 
+                     "to 0, the system will pick an appropriate number.")
+tf.flags.DEFINE_integer("num_inter_threads", 0,
+                     "Number of threads to use for inter-op parallelism. If set" 
+                     "to 0, the system will pick an appropriate number.")
+
+
+def create_config_proto():
+  """Returns session config proto.
+  Args:
+    params: Params tuple, typically created by make_params or
+            make_params_from_flags.
+  """
+  config = tf.ConfigProto()
+  config.allow_soft_placement = True
+  if(FLAGS.num_intra_threads != 0):
+      config.intra_op_parallelism_threads = FLAGS.num_intra_threads
+  if(FLAGS.num_inter_threads != 0):
+      config.inter_op_parallelism_threads = FLAGS.num_inter_threads
+  # config.gpu_options.force_gpu_compatible = params.force_gpu_compatible
+  # if params.gpu_memory_frac_for_testing > 0:
+  #   config.gpu_options.per_process_gpu_memory_fraction = (
+  #       params.gpu_memory_frac_for_testing)
+  # if params.xla:
+  #   config.graph_options.optimizer_options.global_jit_level = (
+  #       tf.OptimizerOptions.ON_1)
+  # if params.enable_layout_optimizer:
+  #   config.graph_options.rewrite_options.layout_optimizer = (
+  #       rewriter_config_pb2.RewriterConfig.ON)
+
+  return config
+
+
+
 def evaluate(hps):
   """Eval loop."""
   batch_size = 100
@@ -55,7 +92,7 @@ def evaluate(hps):
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
-  sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+  sess = tf.Session(config=create_config_proto())
   tf.train.start_queue_runners(sess)
 
   best_precision = 0.0
