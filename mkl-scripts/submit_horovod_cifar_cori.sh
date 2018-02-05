@@ -31,7 +31,8 @@ export TF_FLAGS="
   --sync_replicas=True \
   --train_steps=80000 \
   --num_intra_threads=33 \
-  --num_inter_threads=2
+  --num_inter_threads=2 \
+  --data_format=channels_last
 "
 
 srun -n ${SLURM_NNODES} -N ${SLURM_NNODES} -c 272 $PYTHON $TF_SCRIPT $TF_FLAGS
