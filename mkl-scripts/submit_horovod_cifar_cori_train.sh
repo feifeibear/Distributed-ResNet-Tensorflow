@@ -13,7 +13,7 @@ export KMP_SETTINGS=1
 export KMP_AFFINITY=granularity=fine,compact,1,0
 export OMP_NUM_THREADS=66
 
-PYTHON=python
+export PYTHON=python
 let BATCH_SIZE=128/${SLURM_JOB_NUM_NODES}
 export BATCH_SIZE
 export TF_SCRIPT="../resnet_cifar_main_horovod.py"
@@ -36,5 +36,4 @@ export TF_FLAGS="
 "
 
 echo $SLURM_JOB_NUM_NODES
-srun -n ${SLURM_JOB_NUM_NODES} -N ${SLURM_JOB_NUM_NODES} -c 272 $PYTHON $TF_SCRIPT $TF_FLAGS
-
+srun -n ${SLURM_JOB_NUM_NODES} -N ${SLURM_JOB_NUM_NODES} -c 272 $PYTHON $TF_SCRIPT $TF_FLAGS > ./logs/${LOG_DIR}/performance.log

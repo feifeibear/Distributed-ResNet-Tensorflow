@@ -30,7 +30,7 @@ import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
 flags = tf.app.flags
-flags.DEFINE_string('dataset', 'cifar10', 'cifar10 or cifar100 or imagenet.')
+flags.DEFINE_string('dataset', 'imagenet', 'cifar10 or cifar100 or imagenet.')
 flags.DEFINE_string('mode', 'train', 'train or eval.')
 flags.DEFINE_string('train_data_path', '',
                            'Filepattern for training data.')
@@ -79,6 +79,16 @@ flags.DEFINE_string("ps_hosts","localhost:2222",
 flags.DEFINE_string("worker_hosts", "localhost:2223,localhost:2224",
                     "Comma-separated list of hostname:port pairs")
 flags.DEFINE_string("job_name", None,"job name: worker or ps")
+flags.DEFINE_string('data_format', 'channels_first',
+                           'channels_first for cuDNN, channels_last for MKL')
+flags.DEFINE_integer("num_intra_threads", 0,
+                     "Number of threads to use for intra-op parallelism. If set" 
+                     "to 0, the system will pick an appropriate number.")
+flags.DEFINE_integer("num_inter_threads", 0,
+                     "Number of threads to use for inter-op parallelism. If set" 
+                     "to 0, the system will pick an appropriate number.")
+
+
 
 FLAGS = flags.FLAGS
 
@@ -98,6 +108,32 @@ _NUM_IMAGES = {
 _FILE_SHUFFLE_BUFFER = 1024
 _SHUFFLE_BUFFER = 1500
 
+def create_config_proto():
+  """Returns session config proto.
+  Args:
+    params: Params tuple, typically created by make_params or
+            make_params_from_flags.
+  """
+  config = tf.ConfigProto()
+  config.allow_soft_placement = True
+  if(FLAGS.num_intra_threads != 0):
+      config.intra_op_parallelism_threads = FLAGS.num_intra_threads
+  if(FLAGS.num_inter_threads != 0):
+      config.inter_op_parallelism_threads = FLAGS.num_inter_threads
+  # config.gpu_options.force_gpu_compatible = params.force_gpu_compatible
+  # if params.gpu_memory_frac_for_testing > 0:
+  #   config.gpu_options.per_process_gpu_memory_fraction = (
+  #       params.gpu_memory_frac_for_testing)
+  # if params.xla:
+  #   config.graph_options.optimizer_options.global_jit_level = (
+  #       tf.OptimizerOptions.ON_1)
+  # if params.enable_layout_optimizer:
+  #   config.graph_options.rewrite_options.layout_optimizer = (
+  #       rewriter_config_pb2.RewriterConfig.ON)
+
+  return config
+
+
 
 
 def filenames(is_training, data_dir):
@@ -110,6 +146,7 @@ def filenames(is_training, data_dir):
     return [
         os.path.join(data_dir, 'validation-%05d-of-00128' % i)
         for i in range(128)]
+
 
 
 def record_parser(value, is_training):
@@ -258,7 +295,7 @@ def train(hps, server):
       # SummarySaverHook. To do that we set save_summaries_steps to 0.
       save_summaries_steps=0,
       stop_grace_period_secs=120,
-      config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
+      config=create_config_proto()) as mon_sess:
     while not mon_sess.should_stop():
       mon_sess.run(model.train_op)
 
