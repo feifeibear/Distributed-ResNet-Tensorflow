@@ -33,10 +33,6 @@ from tensorflow.python.training import moving_averages
 
 FLAGS = tf.app.flags.FLAGS
 
-if(FLAGS.use_horovod == True):
-    import horovod.tensorflow as hvd
-
-
 HParams = namedtuple('HParams',
                      'num_classes, lrn_rate, '
                      'weight_decay_rate, '
@@ -116,7 +112,9 @@ class ResNet(object):
           name="resnet_sync_replicas")
 
     if(FLAGS.use_horovod == True):
+        import horovod.tensorflow as hvd
         optimizer = hvd.DistributedOptimizer(optimizer)
+
     # Batch norm requires update_ops to be added as a train_op dependency.
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
