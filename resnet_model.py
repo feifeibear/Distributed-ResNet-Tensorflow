@@ -26,14 +26,16 @@ import numpy as np
 import tensorflow as tf
 import six
 import resnet_model_official
-import horovod.tensorflow as hvd
 
+tf.app.flags.DEFINE_bool('use_horovod', False,
+                         'Whether to use_horovod.')
 from tensorflow.python.training import moving_averages
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_bool('use_horovod', False,
-                         'Whether to use_horovod.')
+if(FLAGS.use_horovod == True):
+    import horovod.tensorflow as hvd
+
 
 HParams = namedtuple('HParams',
                      'num_classes, lrn_rate, '

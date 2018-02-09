@@ -221,10 +221,17 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1):
     dataset = dataset.shuffle(buffer_size=_NUM_IMAGES['train'])
 
   dataset = dataset.map(parse_record)
-  dataset = dataset.map(
-      lambda image, label: (preprocess_image(image, is_training), label), output_buffer_size=2*batch_size)
+  #dataset = dataset.map(
+  #    lambda image, label: (preprocess_image(image, is_training), label), output_buffer_size=2*batch_size)
 
   #dataset = dataset.prefetch(2 * batch_size)
+  #1.4
+  dataset = dataset.map(
+      lambda image, label: (preprocess_image(image, is_training), label))
+
+  dataset = dataset.prefetch(2 * batch_size)
+
+
 
   # We call repeat after shuffling, rather than before, to prevent separate
   # epochs from blending together.

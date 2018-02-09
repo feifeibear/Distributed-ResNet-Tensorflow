@@ -156,7 +156,7 @@ while [ $running_nodes -lt $num_nodes ]; do
     for (( j=0; j < $((${n_ps_current_node}-1)); j++ )) do
       np="$(cut -d',' -f $(($j+1)) <<<"$current_node_ps")"
       echo "starting ps $ps_task_index: $np"
-      PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
+      PS_CMD="${PYTHON} ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
               > ps.${SLURM_JOBID}.${np//:/-}.log 2>&1 &" 
       echo ${PS_CMD} >> $slurm_node_script
@@ -165,11 +165,11 @@ while [ $running_nodes -lt $num_nodes ]; do
     np=$(cut -d',' -f $(($j+1)) <<<"$current_node_ps")
     echo "starting ps $ps_task_index: $np"
     if [ ${n_w_current_node} == 0 ]; then
-      PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
+      PS_CMD="${PYTHON} ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
               > ps.${SLURM_JOBID}.${np//:/-}.log 2>&1 "
     else
-      PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
+      PS_CMD="${PYTHON} ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
               > ps.${SLURM_JOBID}.${np//:/-}.log 2>&1 &"
     fi
@@ -183,7 +183,7 @@ while [ $running_nodes -lt $num_nodes ]; do
     for (( j=0; j < $((${n_w_current_node}-1)); j++ )) do
       np=$(cut -d',' -f $(($j+1)) <<<"$current_node_w")
       echo "starting worker $w_task_index: $np"
-      WORKER_CMD="python3 ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
+      WORKER_CMD="${PYTHON} ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
                   --task_index=${w_task_index} ${TF_FLAGS} 
                   > worker.${SLURM_JOBID}.${np//:/-}.log 2>&1 &"
       echo ${WORKER_CMD} >> $slurm_node_script
@@ -191,7 +191,7 @@ while [ $running_nodes -lt $num_nodes ]; do
     done
     np=$(cut -d',' -f $(($j+1)) <<<"$current_node_w")
     echo "starting worker $w_task_index: $np"
-    WORKER_CMD="python3 ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
+    WORKER_CMD="${PYTHON} ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
                 --task_index=${w_task_index} ${TF_FLAGS} 
                 > worker.${SLURM_JOBID}.${np//:/-}.log 2>&1 "
     echo ${WORKER_CMD} >> $slurm_node_script
@@ -213,7 +213,7 @@ SLURM_EVALER_HOSTS=$(scontrol show hostnames ${SLURM_NODELIST} |
                        head --bytes -1)
 current_node=$SLURM_EVALER_HOSTS
 TF_EVALER_HOSTS="${SLURM_JOB_NUM_NODES}:2220"
-WORKER_CMD="python3 ${TF_EVAL_SCRIPT} ${TF_EVAL_FLAGS} > eval.${SLURM_JOBID}.${np//:/-}.log 2>&1"
+WORKER_CMD="${PYTHON} ${TF_EVAL_SCRIPT} ${TF_EVAL_FLAGS} > eval.${SLURM_JOBID}.${np//:/-}.log 2>&1"
 slurm_node_script=.tfdist.${SLURM_JOBID}.${current_node}.sh
 echo "#!/bin/bash" > $slurm_node_script
 echo "cvd=\${CUDA_VISIBLE_DEVICES};CUDA_VISIBLE_DEVICES=\${cvd}" >> $slurm_node_script

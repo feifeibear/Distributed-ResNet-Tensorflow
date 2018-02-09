@@ -77,8 +77,8 @@ flags.DEFINE_string("ps_hosts","localhost:2222",
 flags.DEFINE_string("worker_hosts", "localhost:2223,localhost:2224",
                     "Comma-separated list of hostname:port pairs")
 flags.DEFINE_string("job_name", None,"job name: worker or ps")
-flags.DEFINE_string('data_format', 'channels_first',
-                           'channels_first for cuDNN, channels_last for MKL')
+flags.DEFINE_string("data_format", "channels_first",
+                           "channels_first for cuDNN, channels_last for MKL")
 flags.DEFINE_integer("num_intra_threads", 0,
                      "Number of threads to use for intra-op parallelism. If set" 
                      "to 0, the system will pick an appropriate number.")
