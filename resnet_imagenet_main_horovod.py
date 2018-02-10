@@ -27,6 +27,7 @@ import resnet_model
 import logist_model
 import vgg_preprocessing
 import tensorflow as tf
+import horovod.tensorflow as hvd
 
 FLAGS = tf.app.flags.FLAGS
 flags = tf.app.flags
@@ -123,6 +124,9 @@ def create_config_proto():
       config.intra_op_parallelism_threads = FLAGS.num_intra_threads
   if(FLAGS.num_inter_threads != 0):
       config.inter_op_parallelism_threads = FLAGS.num_inter_threads
+
+  config.gpu_options.allow_growth = True
+  config.gpu_options.visible_device_list = str(hvd.local_rank())
   # config.gpu_options.force_gpu_compatible = params.force_gpu_compatible
   # if params.gpu_memory_frac_for_testing > 0:
   #   config.gpu_options.per_process_gpu_memory_fraction = (
@@ -291,11 +295,12 @@ def train(hps, server):
         self._lrn_rate = 0.001 * 0.4
 
   if FLAGS.job_name == None:
+    checkpoint_dir = FLAGS.log_root if hvd.rank() == 0 else None
     #serial version
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.log_root,
         save_checkpoint_secs=60,
-        hooks=[tf.train.StopAtStepHook(last_step=FLAGS.train_steps),
+        hooks=[hvd.BroadcastGlobalVariablesHook(0), tf.train.StopAtStepHook(last_step=FLAGS.train_steps),
             logging_hook, _LearningRateSetterHook()],
         chief_only_hooks=[summary_hook],
         # Since we provide a SummarySaverHook, we need to disable default
@@ -324,6 +329,7 @@ def train(hps, server):
         mon_sess.run(model.train_op)
 
 def main(_):
+  hvd.init()
   if FLAGS.dataset == 'imagenet':
     num_classes = 1001
 

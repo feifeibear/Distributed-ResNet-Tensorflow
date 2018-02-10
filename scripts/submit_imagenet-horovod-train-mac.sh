@@ -1,3 +1,4 @@
+. /home/fangjr/Envs/horovod/bin/activate
 export TF_SCRIPT="../resnet_imagenet_main.py"
 export DATASET=imagenet
 export TF_FLAGS="
@@ -6,7 +7,7 @@ export TF_FLAGS="
   --train_dir=./tmp/resnet_model/train \
   --dataset=${DATASET} \
   --mode=train \
-  --num_gpus=1 \
+  --num_gpus=0 \
   --batch_size=1 \
   --sync_replicas=True \
   --train_steps=112600 \
@@ -14,4 +15,6 @@ export TF_FLAGS="
   --benchmark_mode=True
 "
 
-python3 $TF_SCRIPT $TF_FLAGS
+mpirun -np 4 python3 $TF_SCRIPT $TF_FLAGS
+
+deactivate
