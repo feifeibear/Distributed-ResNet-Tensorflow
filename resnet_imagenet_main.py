@@ -87,6 +87,9 @@ flags.DEFINE_integer("num_intra_threads", 0,
 flags.DEFINE_integer("num_inter_threads", 0,
                      "Number of threads to use for inter-op parallelism. If set" 
                      "to 0, the system will pick an appropriate number.")
+flags.DEFINE_boolean("benchmark_mode", True,
+        "True: use sythetic data, False: real data")
+
 
 
 
@@ -226,6 +229,10 @@ def train(hps, server):
   # images, labels = cifar_input.build_input(
   #     FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
   images, labels = input_fn(True, FLAGS.train_data_path, FLAGS.batch_size, FLAGS.num_epochs)
+  if FLAGS.benchmark_mode:
+    images = tf.constant(0.5, shape=[FLAGS.batch_size, _DEFAULT_IMAGE_SIZE, _DEFAULT_IMAGE_SIZE, _NUM_CHANNELS])
+    labels = tf.random_uniform([FLAGS.batch_size], minval=0, maxval=_LABEL_CLASSES-1, dtype=tf.int32)
+    labels = tf.one_hot(labels, _LABEL_CLASSES)
 
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
   # model = logist_model.LRNet(images, labels, FLAGS.mode)
@@ -283,21 +290,38 @@ def train(hps, server):
       else:
         self._lrn_rate = 0.001 * 0.4
 
-  is_chief = (FLAGS.task_index == 0)
-  with tf.train.MonitoredTrainingSession(
-      master=server.target,
-      is_chief=is_chief,
-      checkpoint_dir=FLAGS.log_root,
-      hooks=[tf.train.StopAtStepHook(last_step=FLAGS.train_steps),
-          logging_hook, _LearningRateSetterHook()],
-      chief_only_hooks=[model.replicas_hook, summary_hook],
-      # Since we provide a SummarySaverHook, we need to disable default
-      # SummarySaverHook. To do that we set save_summaries_steps to 0.
-      save_summaries_steps=0,
-      stop_grace_period_secs=120,
-      config=create_config_proto()) as mon_sess:
-    while not mon_sess.should_stop():
-      mon_sess.run(model.train_op)
+  if FLAGS.job_name == None:
+    #serial version
+    with tf.train.MonitoredTrainingSession(
+        checkpoint_dir=FLAGS.log_root,
+        save_checkpoint_secs=60,
+        hooks=[tf.train.StopAtStepHook(last_step=FLAGS.train_steps),
+            logging_hook, _LearningRateSetterHook()],
+        chief_only_hooks=[summary_hook],
+        # Since we provide a SummarySaverHook, we need to disable default
+        # SummarySaverHook. To do that we set save_summaries_steps to 0.
+        save_summaries_steps=0,
+        config=create_config_proto()) as mon_sess:
+      while not mon_sess.should_stop():
+        mon_sess.run(model.train_op)
+
+
+  else:
+    is_chief = (FLAGS.task_index == 0)
+    with tf.train.MonitoredTrainingSession(
+        master=server.target,
+        is_chief=is_chief,
+        checkpoint_dir=FLAGS.log_root,
+        hooks=[tf.train.StopAtStepHook(last_step=FLAGS.train_steps),
+            logging_hook, _LearningRateSetterHook()],
+        chief_only_hooks=[model.replicas_hook, summary_hook],
+        # Since we provide a SummarySaverHook, we need to disable default
+        # SummarySaverHook. To do that we set save_summaries_steps to 0.
+        save_summaries_steps=0,
+        stop_grace_period_secs=120,
+        config=create_config_proto()) as mon_sess:
+      while not mon_sess.should_stop():
+        mon_sess.run(model.train_op)
 
 def main(_):
   if FLAGS.dataset == 'imagenet':
@@ -307,53 +331,56 @@ def main(_):
                              lrn_rate=0.1,
                              weight_decay_rate=0.0001,
                              optimizer='mom')
+  if FLAGS.job_name == None:
+    # serial version
+    train(hps, None)
+  else:
+    # add cluster information
+    if FLAGS.job_name is None or FLAGS.job_name == "":
+      raise ValueError("Must specify an explicit `job_name`")
+    if FLAGS.task_index is None or FLAGS.task_index =="":
+      raise ValueError("Must specify an explicit `task_index`")
 
-  # add cluster information
-  if FLAGS.job_name is None or FLAGS.job_name == "":
-    raise ValueError("Must specify an explicit `job_name`")
-  if FLAGS.task_index is None or FLAGS.task_index =="":
-    raise ValueError("Must specify an explicit `task_index`")
+    print("job name = %s" % FLAGS.job_name)
+    print("task index = %d" % FLAGS.task_index)
 
-  print("job name = %s" % FLAGS.job_name)
-  print("task index = %d" % FLAGS.task_index)
+    #Construct the cluster and start the server
+    ps_spec = FLAGS.ps_hosts.split(",")
+    worker_spec = FLAGS.worker_hosts.split(",")
 
-  #Construct the cluster and start the server
-  ps_spec = FLAGS.ps_hosts.split(",")
-  worker_spec = FLAGS.worker_hosts.split(",")
+    # Get the number of workers.
+    num_workers = len(worker_spec)
+    FLAGS.replicas_to_aggregate = num_workers
 
-  # Get the number of workers.
-  num_workers = len(worker_spec)
-  FLAGS.replicas_to_aggregate = num_workers
+    cluster = tf.train.ClusterSpec({
+        "ps": ps_spec,
+        "worker": worker_spec})
 
-  cluster = tf.train.ClusterSpec({
-      "ps": ps_spec,
-      "worker": worker_spec})
+    if not FLAGS.existing_servers:
+      # Not using existing servers. Create an in-process server.
+      server = tf.train.Server(
+          cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
+      if FLAGS.job_name == "ps":
+        server.join()
 
-  if not FLAGS.existing_servers:
-    # Not using existing servers. Create an in-process server.
-    server = tf.train.Server(
-        cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
-    if FLAGS.job_name == "ps":
-      server.join()
+    if FLAGS.num_gpus > 0:
+      # Avoid gpu allocation conflict: now allocate task_num -> #gpu
+      # for each worker in the corresponding machine
+      gpu = (FLAGS.task_index % FLAGS.num_gpus)
+      worker_device = "/job:worker/task:%d/gpu:%d" % (FLAGS.task_index, gpu)
+    elif FLAGS.num_gpus == 0:
+      # Just allocate the CPU to worker server
+      cpu = 0
+      worker_device = "/job:worker/task:%d/cpu:%d" % (FLAGS.task_index, cpu)
 
-  if FLAGS.num_gpus > 0:
-    # Avoid gpu allocation conflict: now allocate task_num -> #gpu
-    # for each worker in the corresponding machine
-    gpu = (FLAGS.task_index % FLAGS.num_gpus)
-    worker_device = "/job:worker/task:%d/gpu:%d" % (FLAGS.task_index, gpu)
-  elif FLAGS.num_gpus == 0:
-    # Just allocate the CPU to worker server
-    cpu = 0
-    worker_device = "/job:worker/task:%d/cpu:%d" % (FLAGS.task_index, cpu)
+    with tf.device(
+        tf.train.replica_device_setter(
+            worker_device=worker_device,
+            # ps_device="/job:ps/cpu:0",
+            cluster=cluster)):
 
-  with tf.device(
-      tf.train.replica_device_setter(
-          worker_device=worker_device,
-          # ps_device="/job:ps/cpu:0",
-          cluster=cluster)):
-
-    if FLAGS.mode == 'train':
-      train(hps, server)
+      if FLAGS.mode == 'train':
+        train(hps, server)
 
 if __name__ == '__main__':
   tf.logging.set_verbosity(tf.logging.INFO)
