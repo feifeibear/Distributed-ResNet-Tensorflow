@@ -40,8 +40,8 @@ export TF_FLAGS="
   --batch_size=${BATCH_SIZE} \
   --sync_replicas=True \
   --train_steps=80000 \
-  --num_intra_threads=66 \
-  --num_inter_threads=3 \
+  --num_intra_threads=2 \
+  --num_inter_threads=33 \
   --data_format=channels_last
 "
 
@@ -52,8 +52,8 @@ export TF_EVAL_FLAGS="
   --dataset=${DATASET} \
   --mode=eval \
   --num_gpus=0 \
-  --num_intra_threads=66 \
-  --num_inter_threads=3 \
+  --num_intra_threads=2 \
+  --num_inter_threads=33 \
   --data_format=channels_last
 "
 
@@ -78,7 +78,7 @@ fi
 
 # run distributed TensorFlow
 DIST_TF_LAUNCHER_SCRIPT=run_dist_train_eval_daint.sh
-DIST_TF_LAUNCHER_DIR=./logs/$1-ps-$2-wk-batch-$3-${DATASET}-log #$SCRATCH/run_dist_tf_daint_directory
+DIST_TF_LAUNCHER_DIR=./logs/${TF_NUM_WORKERS}-ps-${TF_NUM_PS}-wk-batch-${BATCH_SIZE}-${DATASET}-log #$SCRATCH/run_dist_tf_daint_directory
 if [ $4 ]; then
   echo "remove previous checkpoints"
   rm -rf $DIST_TF_LAUNCHER_DIR
