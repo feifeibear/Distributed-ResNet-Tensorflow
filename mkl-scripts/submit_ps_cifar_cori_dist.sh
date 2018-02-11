@@ -14,7 +14,7 @@ module load tensorflow/intel-head-MKL-DNN
 export KMP_BLOCKTIME=1
 export KMP_SETTINGS=1
 export KMP_AFFINITY=granularity=fine,compact,1,0
-export OMP_NUM_THREADS=66
+export OMP_NUM_THREADS=33
 
 export PYTHON=python
 
