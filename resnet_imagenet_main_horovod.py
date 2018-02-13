@@ -296,16 +296,18 @@ def train(hps, server):
 
   if FLAGS.job_name == None:
     checkpoint_dir = FLAGS.log_root if hvd.rank() == 0 else None
+    save_checkpoint_secs = 600 if hvd.rank() == 0 else None
+    save_summaries_secs = 600 if hvd.rank() == 0 else None
     #serial version
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.log_root,
-        save_checkpoint_secs=60,
+        save_checkpoint_secs=save_checkpoint_secs,
         hooks=[hvd.BroadcastGlobalVariablesHook(0), tf.train.StopAtStepHook(last_step=FLAGS.train_steps),
             logging_hook, _LearningRateSetterHook()],
         chief_only_hooks=[summary_hook],
         # Since we provide a SummarySaverHook, we need to disable default
         # SummarySaverHook. To do that we set save_summaries_steps to 0.
-        save_summaries_steps=0,
+        save_summaries_secs = save_summaries_secs,
         config=create_config_proto()) as mon_sess:
       while not mon_sess.should_stop():
         mon_sess.run(model.train_op)
