@@ -530,6 +530,11 @@ def resnet_main(flags, model_function, input_function):
   # Set up a RunConfig to only save checkpoints once per training cycle.
   config = tf.ConfigProto()
   config.gpu_options.allow_growth = True
+  # add for knl
+  if(flags.num_intra_threads != 0):
+      config.inter_op_parallelism_threads = flags.num_intra_threads
+  if(flags.num_inter_threads != 0):
+      config.intra_op_parallelism_threads = flags.num_inter_threads
   config.gpu_options.visible_device_list = str(hvd.local_rank())
   run_config = tf.estimator.RunConfig(session_config = config).replace(save_checkpoints_secs=1e9)
 
@@ -617,3 +622,9 @@ class ResnetArgParser(argparse.ArgumentParser):
              'is not always compatible with CPU. If left unspecified, '
              'the data format will be chosen automatically based on '
              'whether TensorFlow was built for CPU or GPU.')
+    self.add_argument(
+        '--num_inter_threads', type=int, default=0,
+        help='fro knl interhread.')
+    self.add_argument(
+        '--num_intra_threads', type=int, default=0,
+        help='fro knl intrahread.')
